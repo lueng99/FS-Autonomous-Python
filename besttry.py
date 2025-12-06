@@ -5,24 +5,24 @@ import math
 import numpy
 import matplotlib.pyplot as plt
 
-# --- CONFIGURACIÓN DE LA RUTA ---
-sys.path.append(r"C:\Users\alvar\Music\FS\Formula-Student-Driverless-Simulator-master\python")
+# ROUTE CONFIGURATION
+sys.path.append(IMPORT YOUR ROUTE)
 import fsds
 
-# --- CONEXIÓN AL SIMULADOR ---
+# CREATING THE CONNECTIONS
 client = fsds.FSDSClient()
 client.confirmConnection()
 print("Conectado. Ajuste v1.1: Más velocidad, frenos más suaves...")
 
 client.enableApiControl(True)
 
-# --- CONSTANTES DEL COCHE ---
+# CAR CONSTANTS
 max_throttle = 0.5      
-target_speed = 7.0      # [AJUSTE] Subimos velocidad objetivo
+target_speed = 7.0      
 max_steering = 0.4      
 cones_range_cutoff = 8  
 
-# --- FUNCIONES AUXILIARES ---
+# AUXILIARY FUNCTIONS
 
 def pointgroup_to_cone(group):
     average_x = 0
@@ -80,7 +80,7 @@ def get_velocity_and_throttle():
     throttle = max_throttle * max(1 - velocity / target_speed, 0)
     return velocity, throttle
 
-# --- BUCLE PRINCIPAL ---
+# PRINCIPAL LOOP
 try:
     while True:
         plt.pause(0.05)
@@ -91,28 +91,26 @@ try:
         if len(cones) == 0:
             continue
 
-        # 1. Calcular valores base
+        # CALCULTE THE STEERING ANGLE
         steering_val = calculate_steering(cones)
-        velocity, throttle_val = get_velocity_and_throttle() # Obtenemos velocidad real
+        velocity, throttle_val = get_velocity_and_throttle() # SPEED AT THE MOMENT
         brake_val = 0.0 
 
-        # 2. Lógica de Frenado MEJORADA (Más suave)
+        # BREAKING LOGIC
         abs_steer = abs(steering_val)
         
         if abs_steer > 0.3:
-            throttle_val = 0.0  # Soltar gas
+            throttle_val = 0.0  # REALEASE THROTTLE
             
-            # [AJUSTE CLAVE] Solo frenamos si vamos "rápido" (> 4 m/s)
-            # Si vamos lentos, dejamos que el coche fluya (coasting)
             if velocity > 4.0:
-                brake_val = 0.05 # Freno mínimo (apenas tocarlo)
+                brake_val = 0.05
                 
-                # Si la curva es MUY cerrada
+                # IF THE TURN IS TO SHARP 
                 if abs_steer > 0.5:
-                    # [AJUSTE] Bajamos la intensidad máxima de 0.5 a 0.25
+                    # MORE BREAK
                     brake_val = 0.25 
 
-        # 3. Enviar órdenes
+        # SEND ORDERS TO THE CAR
         car_controls = fsds.CarControls()
         car_controls.steering = float(steering_val)
         car_controls.throttle = float(throttle_val)
@@ -120,10 +118,11 @@ try:
         
         client.setCarControls(car_controls)
 
-        # 4. Dibujar
+        # PRINT THE GRAFICS
         for cone in cones:
             plt.scatter(x=-1*cone['y'], y=cone['x'])
 
 except KeyboardInterrupt:
     print("Deteniendo el coche...")
+
     client.enableApiControl(False)
