@@ -10,8 +10,8 @@ First model of a driverless formula student car, all the project is made in pyth
   * [The Model (Logic)](https://www.google.com/search?q=%23the-model-logic)
   * [Prerequisites](https://www.google.com/search?q=%23prerequisites)
   * [Installation](https://www.google.com/search?q=%23installation)
+  * [Simulation Settings](https://www.google.com/search?q=%23simulation-settings)
   * [Usage](https://www.google.com/search?q=%23usage)
-  * [Configuration](https://www.google.com/search?q=%23configuration)
 
 -----
 
@@ -23,10 +23,10 @@ The system connects to the Unreal Engine simulation via the FSDS Python API, pro
 
 ### Key Features
 
-  * **LiDAR Perception:** Custom point-cloud clustering algorithm to identify cones.
+  * **LiDAR Perception:** Custom point-cloud clustering algorithm to identify cones without cameras.
   * **Reactive Control:** Centroid-based steering logic with dynamic speed adjustment.
   * **Live Telemetry:** Real-time visualization of cone detection using Matplotlib.
-  * **Smart Braking:** Automatic corner detection and velocity-dependent braking.
+  * **Smart Braking:** Automatic corner detection and velocity-dependent braking logic.
 
 -----
 
@@ -52,9 +52,7 @@ The steering logic is a **Reactive P-Controller**:
 ### 3\. Longitudinal Control (Throttle & Brake)
 
   * **Throttle:** Adjusted dynamically based on the difference between current velocity and `target_speed`.
-  * **Cornering Logic:**
-      * If the steering angle exceeds `0.3` (entering a turn), the throttle is cut to `0.0`.
-      * **Active Braking:** If velocity is high ($> 4.0 m/s$) and the turn is sharp ($> 0.5$ steering), the brakes are applied softly to maintain traction.
+  * **Cornering Logic:** If the steering angle indicates a sharp turn, the throttle is cut. If the speed is high ($> 4.0 m/s$) and the turn is sharp, the brakes are applied to maintain traction.
 
 -----
 
@@ -62,24 +60,23 @@ The steering logic is a **Reactive P-Controller**:
 
 To run this simulation, you need the following environment set up:
 
-### Simulator
+  * **Simulator:** [Formula Student Driverless Simulator (FSDS)](https://github.com/FS-Driverless/Formula-Student-Driverless-Simulator/releases)
+  * **Python:** Version 3.7+
+  * **Libraries:** `fsds`, `numpy`, `matplotlib`
 
-  * **Formula Student Driverless Simulator (FSDS):** You must download and run the FSDS binary.
-      * [Download FSDS](https://github.com/FS-Driverless/Formula-Student-Driverless-Simulator/releases)
-      * [FSDS Documentation](https://fs-driverless.github.io/Formula-Student-Driverless-Simulator/)
+-----
 
-### Python Environment
+## ⚙️ Simulation Settings (Crucial)
 
-  * **Python 3.7+**
-  * **FSDS Python Client:** The `fsds` library found in the simulator's `python/` folder.
+For the Python script to function correctly, the simulator must be configured with specific sensor parameters (specifically a single-layer LiDAR with 500 points per scan).
 
-### Python Libraries
+**⚠️ Important:**
+You must use the `settings.json` file provided in this repository.
 
-Install the dependencies using pip:
+1.  Locate the `settings.json` file in the root of this project.
+2.  Copy it and replace the existing settings file in your FSDS configuration folder (typically located in `Documents/AirSim` or your simulator's root folder).
 
-```bash
-pip install numpy matplotlib
-```
+*Failure to use this specific settings file will result in the car not detecting cones correctly.*
 
 -----
 
@@ -95,39 +92,37 @@ pip install numpy matplotlib
 2.  **Setup the FSDS Library:**
 
       * Locate the `fsds` folder inside your downloaded Simulator directory.
-      * Either copy that `fsds` folder into this project's root, or add it to your PYTHONPATH.
-      * *Note: The script currently looks for the library at a specific path. You may need to update the `sys.path.append(...)` line in the script to match your computer.*
+      * Ensure the `fsds` library is accessible to your Python environment (either copy it to the project root or add it to PYTHONPATH).
+
+3.  **Install Dependencies:**
+
+    ```bash
+    pip install numpy matplotlib
+    ```
 
 -----
 
 ## 🚀 Usage
 
-1.  **Launch the Simulator:**
-    Open `FSDS.exe` (or the binary for your OS). Select a map (e.g., *Time Trial*).
-
-2.  **Run the Python Agent:**
-
+1.  **Start the Simulator:** Launch the FSDS executable.
+2.  **Run the Agent:**
     ```bash
     python besttry.py
     ```
-
 3.  **Operation:**
-
       * The script will connect to the API.
-      * A Matplotlib window will open, showing the "Bird's Eye View" of the cones relative to the car.
+      * A Matplotlib window will appear showing the real-time cone detection.
       * The car will automatically accelerate and navigate the track.
 
 -----
 
-## 🎛️ Configuration
+## 🎛️ Python Configuration
 
-You can tune the vehicle behavior by modifying the constants at the top of `besttry.py`:
+Vehicle behavior constants can be tuned directly in `besttry.py`:
 
 ```python
-max_throttle = 0.5       # Maximum gas output (0.0 to 1.0)
-target_speed = 7.0       # Target cruising speed (m/s)
+max_throttle = 0.5       # Maximum gas output
+target_speed = 7.0       # Target cruising speed
 max_steering = 0.4       # Steering limiter
-cones_range_cutoff = 8   # How far ahead the car "sees" (meters)
+cones_range_cutoff = 8   # Perception horizon (meters)
 ```
-
------
